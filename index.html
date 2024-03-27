@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>分析点树状图</title>
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <link rel="stylesheet" href="css/comon0.css" />
+    <script src="echarts.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        background-color: var(--body-color);
+        transition: all 0.3s ease;
+      }
+
+      /* 设置全局变量 */
+      :root {
+        --body-color: #202224;
+        --shell-color: #171717;
+        --primary-color: #3a3b3c;
+        --primary-color-light: #3a3b3c;
+        --toggle-color: #fff;
+        --text-color: #ccc;
+      }
+      .shell {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 250px;
+        padding: 10px 14px;
+        background: var(--shell-color);
+        transition: all 0.3s ease;
+        z-index: 100;
+      }
+
+      .close {
+        width: 8px;
+      }
+
+      .shell li {
+        height: 50px;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+      }
+      .icon {
+        min-width: 60px;
+        border-radius: 6px;
+      }
+
+      .icon {
+        min-width: 60px;
+        border-radius: 6px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font: 300 23px "";
+      }
+
+      .text,
+      .icon {
+        color: var(--text-color);
+        transition: all 0.3s ease;
+      }
+
+      .text {
+        font: 500 17px;
+        white-space: nowrap;
+        opacity: 1;
+      }
+
+      .shell.close .text {
+        opacity: 0;
+      }
+
+      header {
+        position: relative;
+      }
+
+      .image-text {
+        display: flex;
+        align-items: center;
+      }
+
+      .logo-text {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .name {
+        margin-top: 2px;
+        font: 600 18px "";
+      }
+
+      .software {
+        font-size: 20px;
+        margin-top: -2px;
+        display: block;
+      }
+
+      .image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .image img {
+        width: 45px;
+        border-radius: 6px;
+      }
+
+      .toggle {
+        position: absolute;
+        top: 50%;
+        right: -25px;
+        transform: translateY(-50%) rotate(180deg);
+        height: 25px;
+        width: 25px;
+        background-color: var(--primary-color);
+        color: var(--shell-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .shell.close .toggle {
+        transform: translateY(-50%) rotate(0deg);
+      }
+
+      .menu {
+        margin-top: 40px;
+      }
+
+      li.search-box {
+        border-radius: 6px;
+        background-color: var(--primary-color-light);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      li.search-box input {
+        height: 100%;
+        width: 100%;
+        outline: none;
+        border: none;
+        background-color: var(--primary-color-light);
+        color: var(--text-color);
+        border-radius: 6px;
+        font-size: 17px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .shell li a {
+        list-style: none;
+        height: 100%;
+        background-color: transparent;
+        display: flex;
+        align-items: center;
+        height: 100%;
+        width: 100%;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+      }
+
+      .shell li a:hover {
+        background-color: var(--primary-color);
+      }
+
+      .shell li a:hover .icon,
+      .shell li a:hover .text {
+        color: var(--shell-color);
+      }
+
+      .menu-bar {
+        height: calc(100% - 55px);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow-y: scroll;
+      }
+
+      .menu-bar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .menu-bar .mode {
+        border-radius: 6px;
+        background-color: var(--primary-color-light);
+        position: relative;
+        transition: all 0.3s ease;
+      }
+
+      .menu-bar .mode .sun-moon {
+        height: 50px;
+        width: 60px;
+      }
+
+      .mode .sun-moon i {
+        position: absolute;
+      }
+
+      .mode .sun-moon i.sun {
+        opacity: 0;
+      }
+
+      .toggle-switch {
+        position: absolute;
+        right: 0;
+        height: 100%;
+        min-width: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .switch {
+        position: relative;
+        height: 22px;
+        width: 40px;
+        border-radius: 25px;
+        background-color: var(--toggle-color);
+        transition: all 0.3s ease;
+      }
+
+      .switch::before {
+        content: "";
+        position: absolute;
+        height: 15px;
+        width: 15px;
+        border-radius: 50%;
+        top: 50%;
+        left: 5px;
+        transform: translateY(-50%);
+        background-color: var(--shell-color);
+        transition: all 0.3s ease;
+      }
+    </style>
+  </head>
+  <canvas></canvas>
+  <body>
+    <canvas></canvas>
+    <!--导航栏-->
+    <nav class="shell close">
+      <header>
+        <div class="image-text">
+          <span class="image">
+            <img src="./1.jpg" alt="" />
+          </span>
+          <div class="text logo-text">
+            <span class="name"><h3>目录</h3></span>
+            <br />
+            <span class="software"
+              ><h4>小组成员：</h4>
+              <h5><br />罗鹏，陈坤<br />李正天，钟楚政</h5></span
+            >
+          </div>
+        </div>
+        <i class="iconfont icon-xiangyoujiantou toggle"></i>
+      </header>
+      <div class="menu-bar">
+        <div class="menu">
+          <ul class="menu-links">
+            <li class="nav-link">
+              <a
+                href="C:\Users\LOPE\Desktop\新能源汽车发展脉络以及广泛普及的原因\新能源汽车\index.html"
+              >
+                <i class="iconfont icon-shouye icon"></i>
+                <span class="text nac-text"><h1>首页</h1></span>
+              </a>
+            </li>
+
+            <li class="nav-link">
+              <a
+                href="C:\Users\LOPE\Desktop\新能源汽车发展脉络以及广泛普及的原因\新能源汽车\时间脉络.html"
+              >
+                <i class="iconfont icon-shoucangxiao icon"></i>
+                <span class="text nac-text"><h1>时间脉络</h1></span>
+              </a>
+            </li>
+
+            <li class="nav-link">
+              <a
+                href="C:\Users\LOPE\Desktop\新能源汽车发展脉络以及广泛普及的原因\新能源汽车\分析点树状图.html"
+              >
+                <i class="iconfont icon-lishi icon"></i>
+                <span class="text nac-text"><h1>分析点树状图</h1></span>
+              </a>
+            </li>
+
+            <li class="nav-link">
+              <a
+                href="C:\Users\LOPE\Desktop\新能源汽车发展脉络以及广泛普及的原因\新能源汽车\数据化大屏.html"
+              >
+                <i class="iconfont icon-xiaoxi icon"></i>
+                <span class="text nac-text"><h1>数据化大屏</h1></span>
+              </a>
+            </li>
+
+            <li class="nav-link">
+              <a
+                href="C:\Users\LOPE\Desktop\新能源汽车发展脉络以及广泛普及的原因\新能源汽车\海报设计.html"
+              >
+                <i class="iconfont icon-fensi icon"></i>
+                <span class="text nac-text"><h1>海报设计</h1></span>
+              </a>
+            </li>
+
+            <li class="nav-link">
+              <a
+                href="C:\Users\LOPE\Desktop\新能源汽车发展脉络以及广泛普及的原因\新能源汽车\周边产品设计.html"
+              >
+                <i class="iconfont icon-chuangzuo icon"></i>
+                <span class="text nac-text"><h1>周边产品设计</h1></span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <style>
+      body {
+        width: 100%;
+        height: 100vh;
+        /* 背景渐变 */
+        background-image: linear-gradient(-225deg, #000000 0%);
+      }
+      canvas {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+      }
+      html {
+        overflow-x: hidden;
+      }
+    </style>
+    <div class="loading">
+      <div class="loadbox"><img src="images/loading.gif" /> 页面加载中...</div>
+    </div>
+    <div class="head">
+      <h1>BEV广泛普及的原因文字分析</h1>
+      <div
+        class="boxall"
+        style="
+          height: calc(800% - 0rem);
+          margin-top: 20px;
+          height: 700px;
+          width: auto;
+          background-color: #ffffff;
+        "
+        id="main"
+      >
+        <script
+          type="text/javascript"
+          style="text-align: center; justify-content: center"
+        >
+          var chartDom = document.getElementById("main");
+          var myChart = echarts.init(chartDom);
+          var option;
+          const data = {
+            name: "BEV广泛普及的原因",
+            children: [
+              {
+                name: "在技术层面",
+                children: [
+                  {
+                    name: "电能优势",
+                    children: [
+                      {
+                        name: "产电来源",
+                        children: [
+                          { name: "我国从近十年来的产电方式越来越环保" },
+                          { name: "主要的产电方式还是火力发电" },
+                        ],
+                      },
+                      {
+                        name: "储电能力",
+                        children: [
+                          {
+                            name: "我国的动力电池装机量持续上涨,储电能力大幅度提升",
+                          },
+                        ],
+                      },
+                      {
+                        name: "发电效率",
+                        children: [
+                          {
+                            name: "新型火力发电厂热效率大约45%",
+                          },
+                          {
+                            name: "油车内燃机热效率平时大约20%-25%:高速行驶时40%",
+                          },
+                        ],
+                      },
+                      {
+                        name: "废旧电池利用",
+                        children: [
+                          {
+                            name: "每吨废旧电池就可以再造12600元的锂资源",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    name: "电车结构",
+                    children: [
+                      {
+                        name: "整车控制器",
+
+                        children: [
+                          {
+                            name: "电机控制器",
+                            children: [
+                              {
+                                name: "内含功能诊断电路",
+                              },
+                            ],
+                          },
+                          {
+                            name: "电流传感器",
+                            children: [
+                              {
+                                name: "用以检测电机工作的实际电流",
+                              },
+                            ],
+                          },
+                          {
+                            name: "电压传感器",
+                            children: [
+                              {
+                                name: "用以检测供给电机控制器工作的实际电压",
+                              },
+                            ],
+                          },
+                          {
+                            name: "温度传感器",
+                            children: [
+                              {
+                                name: "用以检测电机控制系统的工作温度",
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                      {
+                        name: "电源系统",
+                        children: [
+                          {
+                            name: "动力电池",
+                            children: [
+                              {
+                                name: "动力电池是电动汽车的动力源，是能量的存储装置",
+                                children: [
+                                  {
+                                    name: "锂离子蓄电池",
+                                  },
+                                  {
+                                    name: "磷酸铁锂离子蓄电池",
+                                  },
+                                  {
+                                    name: "三元锂离子蓄电池",
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                          {
+                            name: "电池管理系统",
+                            children: [
+                              {
+                                name: "电池管理系统实时监控动力电池的使用情况",
+                              },
+                            ],
+                          },
+                          {
+                            name: "车载充电机",
+                            children: [
+                              {
+                                name: "将电网供电制式转换为对动力电池充电要求的制式",
+                              },
+                            ],
+                          },
+                          {
+                            name: "辅助动力源",
+                            children: [
+                              {
+                                name: "给各种辅助用电装置提供所需的能源",
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                      {
+                        name: "辅助系统",
+                        children: [
+                          {
+                            name: "辅助设备来提高汽车的操纵性和成员的舒适性",
+                            children: [
+                              {
+                                name: "车载信息显示系统",
+                              },
+                              {
+                                name: "动力转向系统",
+                              },
+                              {
+                                name: "导航系统",
+                              },
+                              {
+                                name: "空调",
+                              },
+                              {
+                                name: "照明及除霜装置",
+                              },
+                              {
+                                name: "刮水器",
+                              },
+                              {
+                                name: "收音机",
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                      {
+                        name: "驱动电机系统",
+                        children: [
+                          {
+                            name: "将电能转化为机械能，通过传动装置驱动或直接驱动",
+                            children: [
+                              {
+                                name: "电子控制器",
+                              },
+                              {
+                                name: "功率变换器",
+                              },
+                              {
+                                name: "驱动电动机",
+                              },
+                              {
+                                name: "机械传动装置",
+                              },
+                              {
+                                name: "车轮",
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    name: "车辆内饰",
+                    children: [
+                      {
+                        name: "车内大屏",
+                        children: [
+                          {
+                            name: "屏幕材料多样化",
+                          },
+                          {
+                            name: "屏幕形式多样化",
+                            children: [
+                              {
+                                name: "从特斯拉开始,竖屏之后更是有旋转屏、悬浮屏等层出不穷",
+                              },
+                              {
+                                name: "黑科技的折叠柔性屏",
+                              },
+                              {
+                                name: "信息娱乐系统",
+                                children: [
+                                  {
+                                    name: "多屏互动优势",
+                                  },
+                                  {
+                                    name: "内容丰富性，展示多样的信息内容",
+                                  },
+                                  {
+                                    name: "个性化需求强，可以根据客户的需求个性化定制",
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                          {
+                            name: "屏幕造型多样化",
+                          },
+                        ],
+                      },
+                      {
+                        name: "智能网联化",
+                        children: [
+                          {
+                            name: "智能座舱的交互体验",
+                            children: [
+                              {
+                                name: "手势控制",
+                              },
+                              {
+                                name: "AR-HUD",
+                              },
+                              {
+                                name: "触摸交互",
+                              },
+                              {
+                                name: "极致灯光",
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "在环境层面",
+                children: [
+                  {
+                    name: "碳循环",
+                    children: [
+                      {
+                        name: "全球二氧化碳排放量",
+                        children: [
+                          {
+                            name: "油车的尾气排放存在影响",
+                          },
+                        ],
+                      },
+                      {
+                        name: "生命周期碳排放",
+                        children: [
+                          {
+                            name: "一辆电动车在整个生命周期中排放的二氧化碳最少",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    name: "海平面的变化",
+                    children: [
+                      {
+                        name: "油车尾气的排放存在部分影响",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "在国家政策层面",
+                children: [
+                  {
+                    name: "国家大力宣传新能源",
+                    children: [
+                      { name: "《智能汽车基础地图标准体系建设指南》" },
+                      { name: "《绿色产业指导目录》" },
+                      { name: "《2023年全国标准化工作要点》" },
+                      { name: "《2023年能源工作指导意见》" },
+                      {
+                        name: "《关于进一步构建高质量充电基础设施体系的指导意见》",
+                      },
+                      {
+                        name: "《关于延续和优化新能源汽车车辆购置税减免政策的公告》",
+                      },
+                      {
+                        name: "《国家车联网产业标准体系建设指南(智能网联汽车)》",
+                      },
+                      { name: "《汽车行业稳增长工作方案》" },
+                      {
+                        name: "《关于开展智能网联汽车场景示范应用补贴资金申报的通知》",
+                      },
+                      {
+                        name: "《关于2023年度充换电基础设施财政补贴政策的通知》",
+                      },
+                    ],
+                  },
+                  {
+                    name: "融合开放成为新能源汽车发展的新特征",
+                    children: [
+                      {
+                        name: "总体部署",
+                        children: [
+                          {
+                            name: "总体思路",
+                            children: [
+                              {
+                                name: "坚持创新、协调、绿色、开放、共享的发展理念",
+                              },
+                            ],
+                          },
+                          {
+                            name: "基本原则",
+                            children: [
+                              {
+                                name: "市场主导",
+                              },
+                              {
+                                name: "创新驱动",
+                              },
+                              {
+                                name: "协调推进",
+                              },
+                              {
+                                name: "开放发展",
+                              },
+                            ],
+                          },
+                          {
+                            name: "发展愿景",
+                            children: [
+                              {
+                                name: "公共领域用车全面电动化",
+                              },
+                              {
+                                name: "燃料电池汽车实现商业化应用",
+                              },
+                              {
+                                name: "高度自动驾驶汽车实现规模化应用",
+                              },
+                              {
+                                name: "有效促进节能减排水平和社会运行效率的提升",
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "在资源层面",
+                children: [
+                  {
+                    name: "全球石油资源逐渐匮乏",
+                    children: [{ name: "中东爆发的石油危机迅速蔓延至全球" }],
+                  },
+                  {
+                    name: "一些新能源的开发与开采",
+                    children: [
+                      { name: "风电" },
+                      { name: "光伏" },
+                      { name: "太阳能" },
+                      { name: "核能" },
+                      { name: "地热能" },
+                      { name: "生物质能" },
+                    ],
+                  },
+                ],
+              },
+            ],
+          };
+          option = {
+            tooltip: {
+              trigger: "item",
+              triggerOn: "mousemove",
+            },
+            series: [
+              {
+                type: "tree",
+                id: 0,
+                name: "tree1",
+                data: [data],
+                top: "10%",
+                left: "8%",
+                bottom: "22%",
+                right: "20%",
+                symbolSize: 7,
+                edgeShape: "polyline",
+                edgeForkPosition: "63%",
+                initialTreeDepth: 3,
+                lineStyle: {
+                  width: 2,
+                },
+                label: {
+                  backgroundColor: "#fff",
+                  position: "left",
+                  verticalAlign: "middle",
+                  align: "right",
+                },
+                leaves: {
+                  label: {
+                    position: "right",
+                    verticalAlign: "middle",
+                    align: "left",
+                  },
+                },
+                emphasis: {
+                  focus: "descendant",
+                },
+                expandAndCollapse: true,
+                animationDuration: 550,
+                animationDurationUpdate: 750,
+              },
+            ],
+          };
+
+          option && myChart.setOption(option);
+        </script>
+      </div>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        var arr = [];
+        var max;
+        $(".paim li i").each(function () {
+          arr.push($(this).text());
+        });
+        //alert(arr)
+        max = Math.max.apply(null, arr);
+
+        $(".paim .pmbar span").each(function () {
+          var i = $(this).parents("li").index();
+          w = (arr[i] / max) * 100;
+          sw = w.toFixed(0) + "%";
+
+          $(this).css({ width: sw });
+        });
+      });
+    </script>
+
+    <script type="text/javascript" src="js/echarts.min.js"></script>
+    <script language="JavaScript" src="js/js.js"></script>
+    <script>
+      const body = document.querySelector("body"),
+        shell = body.querySelector("nav"),
+        toggle = body.querySelector(".toggle"),
+        searchBtn = body.querySelector(".search-box"),
+        modeSwitch = body.querySelector(".toggle-switch"),
+        modeText = body.querySelector(".mode-text");
+      // 点击toggle元素时触发事件
+      toggle.addEventListener("click", () => {
+        // 切换shell元素的close类
+        shell.classList.toggle("close");
+      });
+      // 点击searchBtn元素时触发事件
+      searchBtn.addEventListener("click", () => {
+        // 移除shell元素的close类
+        shell.classList.remove("close");
+      });
+    </script>
+    <script>
+      // 定义星星的颜色
+      const STAR_COLOR = "#fff";
+      // 定义星星的大小
+      const STAR_SIZE = 1.5;
+      // 定义星星的最小缩放比例
+      const STAR_MIN_SCALE = 0.2;
+      // 定义溢出阈值
+      const OVERFLOW_THRESHOLD = 50;
+      // 定义星星的数量
+      const STAR_COUNT = (window.innerWidth + window.innerHeight) / 8;
+      // 获取canvas元素
+      const canvas = document.querySelector("canvas");
+      // 获取canvas的绘图上下文
+      const context = canvas.getContext("2d");
+      // 定义缩放比例
+      let scale = 1; // device pixel ratio
+      // 定义宽度和高度
+      let width;
+      let height;
+      // 定义星星数组
+      let stars = [];
+      // 定义鼠标指针的位置
+      let pointerX;
+      let pointerY;
+      // 定义速度对象
+      let velocity = { x: 0, y: 0, tx: 0, ty: 0, z: 0.0009 };
+      // 定义触摸输入标志
+      let touchInput = false;
+      // 生成星星
+      generate();
+      // 调整大小
+      resize();
+      // 运行动画
+      step();
+      // 当窗口大小改变时，重新调整大小
+      window.onresize = resize;
+      // 当鼠标在canvas上移动时，更新鼠标指针位置
+      canvas.onmousemove = onMouseMove;
+      // 当触摸屏在canvas上移动时，更新鼠标指针位置
+      canvas.ontouchmove = onTouchMove;
+      // 当触摸屏离开canvas时，更新鼠标指针位置
+      canvas.ontouchend = onMouseLeave;
+      // 当鼠标离开文档时，更新鼠标指针位置
+      document.onmouseleave = onMouseLeave;
+      // 生成星星
+      function generate() {
+        for (let i = 0; i < STAR_COUNT; i++) {
+          stars.push({
+            x: 0,
+            y: 0,
+            z: STAR_MIN_SCALE + Math.random() * (1 - STAR_MIN_SCALE),
+          });
+        }
+      }
+      // 将星星放置到随机位置
+      function placeStar(star) {
+        star.x = Math.random() * width;
+        star.y = Math.random() * height;
+      }
+      // 回收星星并重新放置到新的位置
+      function recycleStar(star) {
+        // 初始化方向为 'z'
+        let direction = "z";
+        // 获取速度的绝对值
+        let vx = Math.abs(velocity.x);
+        let vy = Math.abs(velocity.y);
+        // 如果速度的绝对值大于1，则根据速度的大小随机确定方向
+        if (vx > 1 || vy > 1) {
+          let axis;
+          // 如果水平速度大于垂直速度，则根据水平速度的比例随机确定水平或垂直方向
+          if (vx > vy) {
+            axis = Math.random() < vx / (vx + vy) ? "h" : "v";
+          } else {
+            axis = Math.random() < vy / (vx + vy) ? "v" : "h";
+          }
+          // 根据方向确定具体的移动方向
+          if (axis === "h") {
+            direction = velocity.x > 0 ? "l" : "r";
+          } else {
+            direction = velocity.y > 0 ? "t" : "b";
+          }
+        }
+        // 随机设置星星的缩放比例
+        star.z = STAR_MIN_SCALE + Math.random() * (1 - STAR_MIN_SCALE);
+        // 根据方向设置星星的位置
+        if (direction === "z") {
+          // 如果方向为 'z'，则将星星放置在屏幕中心
+          star.z = 0.1;
+          star.x = Math.random() * width;
+          star.y = Math.random() * height;
+        } else if (direction === "l") {
+          // 如果方向为 'l'，则将星星放置在屏幕左侧
+          star.x = -OVERFLOW_THRESHOLD;
+          star.y = height * Math.random();
+        } else if (direction === "r") {
+          // 如果方向为 'r'，则将星星放置在屏幕右侧
+          star.x = width + OVERFLOW_THRESHOLD;
+          star.y = height * Math.random();
+        } else if (direction === "t") {
+          // 如果方向为 't'，则将星星放置在屏幕顶部
+          star.x = width * Math.random();
+          star.y = -OVERFLOW_THRESHOLD;
+        } else if (direction === "b") {
+          // 如果方向为 'b'，则将星星放置在屏幕底部
+          star.x = width * Math.random();
+          star.y = height + OVERFLOW_THRESHOLD;
+        }
+      }
+      // 调整大小
+      function resize() {
+        // 获取设备像素比例
+        scale = window.devicePixelRatio || 1;
+        // 设置画布的宽度和高度
+        width = window.innerWidth * scale;
+        height = window.innerHeight * scale;
+        canvas.width = width;
+        canvas.height = height;
+        // 将所有星星重新放置到屏幕上
+        stars.forEach(placeStar);
+      }
+      // 动画的每一帧
+      function step() {
+        // 清空画布
+        context.clearRect(0, 0, width, height);
+        // 更新星星的位置和速度
+        update();
+        // 绘制星星
+        render();
+        // 请求下一帧动画
+        requestAnimationFrame(step);
+      }
+      // 更新星星的位置和速度
+      function update() {
+        // 缓动速度
+        velocity.tx *= 0.96;
+        velocity.ty *= 0.96;
+        // 更新速度
+        velocity.x += (velocity.tx - velocity.x) * 0.001;
+        velocity.y += (velocity.ty - velocity.y) * 0.001;
+        // 遍历所有星星
+        stars.forEach((star) => {
+          // 根据速度和缩放比例更新星星的位置
+          star.x += velocity.x * star.z;
+          star.y += velocity.y * star.z;
+          // 根据速度和缩放比例更新星星的位置（使星星围绕屏幕中心旋转）
+          star.x += (star.x - width / 2) * velocity.z * star.z;
+          star.y += (star.y - height / 2) * velocity.z * star.z;
+          // 更新星星的缩放比例
+          star.z += velocity.z;
+          // 如果星星超出屏幕范围，则重新放置到屏幕上
+          if (
+            star.x < -OVERFLOW_THRESHOLD ||
+            star.x > width + OVERFLOW_THRESHOLD ||
+            star.y < -OVERFLOW_THRESHOLD ||
+            star.y > height + OVERFLOW_THRESHOLD
+          ) {
+            recycleStar(star);
+          }
+        });
+      }
+      // 绘制星星
+      function render() {
+        // 遍历所有星星
+        stars.forEach((star) => {
+          // 设置绘制星星的样式
+          context.beginPath();
+          context.lineCap = "round";
+          context.lineWidth = STAR_SIZE * star.z * scale;
+          context.globalAlpha = 0.5 + 0.5 * Math.random();
+          context.strokeStyle = STAR_COLOR;
+          // 绘制星星的路径
+          context.beginPath();
+          context.moveTo(star.x, star.y);
+          // 计算星星的尾巴坐标
+          let tailX = velocity.x * 2;
+          let tailY = velocity.y * 2;
+          // 如果尾巴坐标的绝对值小于0.1，则设置为0.5
+          if (Math.abs(tailX) < 0.1) tailX = 0.5;
+          if (Math.abs(tailY) < 0.1) tailY = 0.5;
+          // 绘制星星的尾巴
+          context.lineTo(star.x + tailX, star.y + tailY);
+          context.stroke();
+        });
+      }
+      // 移动鼠标指针
+      function movePointer(x, y) {
+        // 如果之前有记录鼠标指针的位置，则计算鼠标指针的移动距离，并更新速度
+        if (typeof pointerX === "number" && typeof pointerY === "number") {
+          let ox = x - pointerX;
+          let oy = y - pointerY;
+          velocity.tx = velocity.tx + (ox / 8) * scale * (touchInput ? 1 : -1);
+          velocity.ty = velocity.ty + (oy / 8) * scale * (touchInput ? 1 : -1);
+        }
+        // 更新鼠标指针的位置
+        pointerX = x;
+        pointerY = y;
+      }
+      // 当鼠标在canvas上移动时的事件处理函数
+      function onMouseMove(event) {
+        touchInput = false;
+        movePointer(event.clientX, event.clientY);
+      }
+      // 当触摸屏在canvas上移动时的事件处理函数
+      function onTouchMove(event) {
+        touchInput = true;
+        movePointer(event.touches[0].clientX, event.touches[0].clientY, true);
+        event.preventDefault();
+      }
+      // 当鼠标离开canvas时的事件处理函数
+      function onMouseLeave() {
+        pointerX = null;
+        pointerY = null;
+      }
+    </script>
+  </body>
+</html>
